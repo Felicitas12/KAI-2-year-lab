@@ -1,0 +1,75 @@
+# Visual Studio / Visual Studio 2022
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+build/
+Build/
+_ReSharper*/
+*.ide.*
+*.log
+TestResults/
+artifacts/
+publish/
+
+# Visual Studio cache / temporary files
+*.tmp
+*.tmp_proj
+*.cache
+*.ilk
+*.meta
+*.iobj
+*.ipdb
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+project.lock.json
+project.fragment.lock.json
+
+# Azure / publish
+*.Publish.xml
+.publishsettings
+*.azurePubxml
+
+# SQL Server / Database
+*.mdf
+*.ldf
+*.ndf
+*.dbmdl
+
+# Resharper / JetBrains
+*.DotSettings.user
+
+# VS installer / extensions / packaging
+*.vsix
+*.vsixmanifest
+
+# Mono / Xamarin
+*.apk
+*.aab
+*.ap_
+*.xap
+*.dll.mdb
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# User-specific files (IDE/editor)
+*.userprefs
+*.suo
+*.user
+*.userosscache
