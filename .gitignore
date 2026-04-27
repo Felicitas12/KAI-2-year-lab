@@ -73,3 +73,5 @@ desktop.ini
 *.suo
 *.user
 *.userosscache
+/appz_lab1/x64/Debug
+/x64/Debug
