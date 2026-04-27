@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\events">
+      <UniqueIdentifier>{b6d4761c-d2b9-42d6-9ff3-f814aa9801d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\services">
+      <UniqueIdentifier>{30e37956-dca1-407b-b551-46196673983f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\platform">
+      <UniqueIdentifier>{84ecaaee-148e-4876-8bcd-01398017b2fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\model">
+      <UniqueIdentifier>{ad918e66-85fa-4f2a-adbf-18cd187ebaf9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="appz_lab1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="StreamingService.h">
+      <Filter>Header Files\services</Filter>
+    </ClInclude>
+    <ClInclude Include="GameManager.h">
+      <Filter>Header Files\services</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEvents.h">
+      <Filter>Header Files\events</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatformInstances.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="IStreamable.h">
+      <Filter>Header Files\platform</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkService.h">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="UserAccount.h">
+      <Filter>Header Files\model</Filter>
+    </ClInclude>
+    <ClInclude Include="GameInstances.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="INetworkRequired.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
