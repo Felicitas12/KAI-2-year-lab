@@ -12,123 +12,170 @@
 #include "StreamingService.h"
 
 
-void printAction(const std::string& action, const std::string& err) {
-    std::cout << "ДІЯ: " << action << "\n";
-    if (err.empty()) std::cout << "РЕЗУЛЬТАТ: [УСПІХ]\n\n";
-    else             std::cout << "РЕЗУЛЬТАТ: [БЛОКУВАННЯ] " << err << "\n\n";
+class ConsoleEventLogger : public IGameEventObserver {
+public:
+    void onGameEvent(const GameEventData& d) override {
+        std::cout << "  [ПОДІЯ] ";
+        switch (d.type) {
+        case GameEvent::Installed:     std::cout << "Гру '" << d.gameName << "' встановлено.\n"; break;
+        case GameEvent::Uninstalled:   std::cout << "Гру '" << d.gameName << "' видалено.\n"; break;
+        case GameEvent::Started:       std::cout << "Гру '" << d.gameName << "' запущено.\n"; break;
+        case GameEvent::Stopped:       std::cout << "Гру '" << d.gameName << "' зупинено.\n"; break;
+        case GameEvent::Saved:         std::cout << "Збереження '" << d.details << "' у грі '" << d.gameName << "'.\n"; break;
+        case GameEvent::Loaded:        std::cout << "Завантажено '" << d.details << "' у грі '" << d.gameName << "'.\n"; break;
+        case GameEvent::RatingChanged: std::cout << "Рейтинг '" << d.gameName << "': " << d.details << "\n"; break;
+        }
+    }
+};
+
+void printOp(const std::string& op, const std::string& err) {
+    if (err.empty()) std::cout << "  [OK]   " << op << "\n";
+    else std::cout << "  [FAIL] " << op << "\n         -> " << err << "\n";
 }
 
-void printInfo(const std::string& action, const std::string& info) {
-    std::cout << "ДІЯ: " << action << "\n";
-    std::cout << "РЕЗУЛЬТАТ: " << info << "\n\n";
+void printGameCard(const Game& g) {
+    const auto& r = g.getRequirements();
+    std::cout << "\n  - " << g.getName() << " [" << genreName(g.getGenre()) << "]\n"
+        << "    Встановлена : " << (g.isInstalled() ? "Так" : "Ні") << "\n"
+        << "    Запущена    : " << (g.isRunning() ? "Так" : "Ні") << "\n"
+        << "    Рейтинг     : " << g.getRating() << "  (" << g.getRatingCount() << " оцінок)\n"
+        << "    Розмір HDD  : " << r.hddSizeGB << " ГБ\n";
+    if (g.hasSaves()) {
+        std::cout << "    Збереження  : ";
+        for (const auto& s : g.getSaves()) std::cout << "[" << s << "] ";
+        std::cout << "\n";
+    }
+    std::cout << "  ------------------------------------\n";
+}
+
+void printPlatformInfo(const Platform& p) {
+    const auto& hw = p.getHardware();
+    std::cout << "  Платформа: " << p.getName()
+        << " | CPU " << hw.cpuGHz << " ГГц"
+        << " | RAM " << hw.ramGB << " ГБ"
+        << " | GPU " << hw.gpuGB << " ГБ"
+        << " | HDD вільно " << hw.hddFreeGB << " ГБ\n";
 }
 
 int main() {
     SetConsoleOutputCP(1251);
     SetConsoleCP(1251);
 
-    GameManager mgr;
-    NetworkService network;
-    StreamingService streamSvc;
-    UserAccount player("IlliaPC");
+    ConsoleEventLogger logger;
+    NetworkService     network;
+    GameManager        mgr;
+    UserAccount        player("Gamer42");
 
-    // init -----------------------
-    DesktopPlatform desktop(HardwareSpec(3.5, 16, 8, 100));
-    MobilePlatform  mobile(HardwareSpec(1.5, 2, 1, 10));
-    ConsolePlatform console(HardwareSpec(3.0, 8, 4, 50), 0);
-
-    std::cout << "--- ПОЧАТКОВИЙ СТАН ---\n";
-    std::cout << "Користувач: " << player.getUsername() << " (Не авторизований)\n";
-    std::cout << "Мережа: Відключена\n";
-    std::cout << "Платформи:\n";
-    std::cout << " - Desktop (Потужний процесор, 100 ГБ вільно)\n";
-    std::cout << " - Mobile  (Слабкий процесор, 10 ГБ вільно)\n";
-    std::cout << " - Console (0 підключених маніпуляторів)\n";
-    std::cout << "-----------------------\n\n";
-
-    // base data  -----------------------
-    mgr.addGame(std::make_unique<SimulatorGame>("FlightSim", GameRequirements(2.0, 8, 4, 20)));
-    mgr.addGame(std::make_unique<ShooterGame>("Doom", GameRequirements(2.5, 8, 4, 30)));
-    mgr.addGame(std::make_unique<OnlineAdventureGame>("WoW", GameRequirements(2.0, 4, 2, 15), network));
-    mgr.addGame(std::make_unique<BrowserGame>("Agar.io", GameRequirements(1.0, 1, 0, 0)));
-
-    printAction("Спроба додати другий Шутер (CS:GO), коли в бібліотеці вже є гра цього жанру",
-        mgr.addGame(std::make_unique<ShooterGame>("CS:GO", GameRequirements(2.0, 4, 2, 10))));
-
-    printAction("Спроба додати гру нового жанру (Strategy - StarCraft)",
-        mgr.addGame(std::make_unique<StrategyGame>("StarCraft", GameRequirements(1.5, 4, 2, 10))));
-
-    printAction("Спроба інсталювати Doom (потрібно 30 ГБ) на Mobile (вільно 10 ГБ)",
-        mgr.installGame("Doom", mobile));
-
-    printAction("Спроба запустити FlightSim на Desktop без попередньої інсталяції",
-        mgr.startGame("FlightSim", desktop, player));
-
-    mgr.installGame("FlightSim", desktop);
-
-    printAction("Спроба запустити інстальований FlightSim без авторизації користувача",
-        mgr.startGame("FlightSim", desktop, player));
-
-    player.login("password");
-
-    printAction("Спроба запустити інстальований FlightSim після авторизації користувача",
-        mgr.startGame("FlightSim", desktop, player));
-    mgr.stopGame();
-
-	// simulation of various edge cases  -----------------------
-    mgr.installGame("FlightSim", mobile);
-    printAction("Спроба запустити FlightSim (мінімум CPU 2.0 ГГц) на Mobile (CPU 1.5 ГГц)",
-        mgr.startGame("FlightSim", mobile, player));
-
-    mgr.startGame("FlightSim", desktop, player);
-    mgr.installGame("Doom", desktop);
-    printAction("Спроба запустити Doom, коли вже активно запущена інша гра (FlightSim)",
-        mgr.startGame("Doom", desktop, player));
-    mgr.stopGame();
-
-    printAction("Спроба зберегти стан гри FlightSim до її фактичного запуску",
-        mgr.saveGame("FlightSim", "Slot1"));
-
-    mgr.startGame("FlightSim", desktop, player);
-    printAction("Спроба завантажити збереження, якщо жодного стану ще не було збережено",
-        mgr.loadGame("FlightSim", "Slot1"));
-
-    printAction("Збереження поточного стану запущеної гри у 'Slot1'",
-        mgr.saveGame("FlightSim", "Slot1"));
-
-    printAction("Завантаження існуючого стану гри зі 'Slot1'",
-        mgr.loadGame("FlightSim", "Slot1"));
-    mgr.stopGame();
-
-    printAction("Спроба запустити браузерну гру Agar.io відразу, без встановлення",
-        mgr.startGame("Agar.io", desktop, player));
-    mgr.stopGame();
-
-    mgr.installGame("WoW", desktop);
-    printAction("Спроба запустити онлайн-гру WoW без підключення до інтернету",
-        mgr.startGame("WoW", desktop, player));
-
+    // Автоматично логінимо гравця та вмикаємо мережу для зручності демо
+    player.login("secure_pass");
     network.connect();
-    printAction("Спроба запустити онлайн-гру WoW після підключення до інтернету",
-        mgr.startGame("WoW", desktop, player));
-    mgr.stopGame();
 
-    mgr.installGame("Doom", console);
-    printAction("Спроба запустити гру Doom на Console без підключених маніпуляторів",
-        mgr.startGame("Doom", console, player));
+    // Створюємо десктоп-платформу
+    DesktopPlatform desktop(HardwareSpec(3.5, 16, 8, 100));
 
-    console.connectController();
-    printAction("Спроба запустити гру Doom на Console після підключення маніпулятора",
-        mgr.startGame("Doom", console, player));
-    mgr.stopGame();
+    // Створюємо базові ігри
+    auto simGame = std::make_unique<SimulatorGame>("FlightSim", GameRequirements(3.0, 16, 6, 25));
+    auto fpsGame = std::make_unique<ShooterGame>("Combat Zone", GameRequirements(2.5, 8, 4, 15));
+    auto webGame = std::make_unique<BrowserGame>("Pixel Puzzle", GameRequirements(1.0, 1, 0, 0));
+    auto strGame = std::make_unique<StrategyGame>("StarCraft", GameRequirements(2.0, 4, 2, 10)); // Новий жанр
 
-    mgr.rateGame("FlightSim", 5);
-    printInfo("Отримання рейтингу гри FlightSim після оцінювання користувачем",
-        "Оцінка " + std::to_string(mgr.getRating("FlightSim")).substr(0, 3) + " з 5");
+    simGame->subscribe(&logger);
+    fpsGame->subscribe(&logger);
+    webGame->subscribe(&logger);
+    strGame->subscribe(&logger);
 
-    printAction("Спроба розпочати трансляцію з Desktop", streamSvc.startStream(desktop));
-    printAction("Спроба розпочати трансляцію з Mobile", streamSvc.startStream(mobile));
-    printAction("Спроба розпочати трансляцію з Console", streamSvc.startStream(console));
+    mgr.addGame(std::move(simGame));
+    mgr.addGame(std::move(fpsGame));
+    mgr.addGame(std::move(webGame));
+    mgr.addGame(std::move(strGame));
+
+    std::cout << "========================================\n";
+    std::cout << "      СИСТЕМА СИМУЛЯЦІЇ ІГОР\n";
+    std::cout << "========================================\n";
+    std::cout << "Ласкаво просимо, " << player.getUsername() << "!\n\n";
+
+    std::cout << "--- Поточна система ---\n";
+    printPlatformInfo(desktop);
+    std::cout << "-----------------------\n";
+
+    bool running = true;
+    while (running) {
+        std::cout << "\n======================================\n";
+        std::cout << "             ГОЛОВНЕ МЕНЮ\n";
+        std::cout << "======================================\n";
+        std::cout << "  1. Показати бібліотеку ігор\n";
+        std::cout << "  2. Встановити гру\n";
+        std::cout << "  3. Запустити гру\n";
+        std::cout << "  4. Зупинити активну гру\n";
+        std::cout << "  5. Зберегти прогрес\n";
+        std::cout << "  6. Завантажити збереження\n";
+        std::cout << "  7. Видалити гру\n";
+        std::cout << "  0. Вихід з програми\n";
+        std::cout << "--------------------------------------\n";
+        std::cout << "Ваш вибір: ";
+
+        int choice;
+        if (!(std::cin >> choice)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            std::cout << "  [Помилка] Введіть числовале значення!\n";
+            continue;
+        }
+        std::cin.ignore(10000, '\n');
+        std::string inputStr;
+        std::string slotStr;
+
+        switch (choice) {
+        case 1:
+            std::cout << "\n  === Стан бібліотеки ===\n";
+            for (const auto& g : mgr.getLibrary()) {
+                printGameCard(*g);
+            }
+            break;
+        case 2:
+            std::cout << "Введіть точну назву гри для встановлення: ";
+            std::getline(std::cin, inputStr);
+            printOp("Встановлення '" + inputStr + "'", mgr.installGame(inputStr, desktop));
+            break;
+        case 3:
+            std::cout << "Введіть точну назву гри для запуску: ";
+            std::getline(std::cin, inputStr);
+            printOp("Запуск '" + inputStr + "'", mgr.startGame(inputStr, desktop, player));
+            break;
+        case 4:
+            printOp("Зупинка поточної гри", mgr.stopGame());
+            break;
+        case 5:
+            std::cout << "Введіть назву гри: ";
+            std::getline(std::cin, inputStr);
+            std::cout << "Введіть назву слота: ";
+            std::getline(std::cin, slotStr);
+            printOp("Збереження", mgr.saveGame(inputStr, slotStr));
+            break;
+        case 6:
+            std::cout << "Введіть назву гри: ";
+            std::getline(std::cin, inputStr);
+            std::cout << "Введіть назву слота: ";
+            std::getline(std::cin, slotStr);
+            printOp("Завантаження", mgr.loadGame(inputStr, slotStr));
+            break;
+        case 7:
+            std::cout << "Введіть точну назву гри для видалення: ";
+            std::getline(std::cin, inputStr);
+            printOp("Видалення '" + inputStr + "'", mgr.uninstallGame(inputStr, desktop));
+            break;
+        case 0:
+            std::cout << "\nЗавершення роботи. До побачення!\n";
+            if (mgr.getActiveGame()) {
+                mgr.stopGame();
+            }
+            running = false;
+            break;
+        default:
+            std::cout << "  [Помилка] Невідома команда. Спробуйте ще раз.\n";
+            break;
+        }
+    }
 
     return 0;
 }

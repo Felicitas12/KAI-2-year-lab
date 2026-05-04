@@ -40,7 +40,9 @@ public:
     }
 
     bool hasSaves() const { return !saves_.empty(); }
-    bool saveState(const std::string& slot) {
+    const std::vector<std::string>& getSaves() const { return saves_; }
+	
+	bool saveState(const std::string& slot) {
         if (!running_) return false;
         saves_.push_back(slot);
         return true;
@@ -50,6 +52,7 @@ public:
         return std::find(saves_.begin(), saves_.end(), slot) != saves_.end();
     }
 
+    virtual bool uninstall(Platform& p) = 0;
     virtual bool isInstalled() const = 0;
     virtual bool install(Platform& p) = 0;
     virtual bool start(Platform& p, UserAccount& a) = 0;
@@ -68,20 +71,33 @@ protected:
 class InstallableGame : public Game {
 public:
     InstallableGame(std::string name, GameGenre genre, GameRequirements req) : Game(std::move(name), genre, req) {}
+
     bool isInstalled() const override { return installed_; }
+
     bool install(Platform& p) override {
         if (installed_ || !req_.hasSpace(p.getHardware())) return false;
         installed_ = true; p.consumeHDD(req_.hddSizeGB);
         return true;
     }
+
+    bool uninstall(Platform& p) override {
+        if (!installed_ || running_) return false;
+        installed_ = false;
+        p.releaseHDD(req_.hddSizeGB);
+        emit(GameEvent::Uninstalled, name_);
+        return true;
+    }
+
     bool start(Platform& p, UserAccount& acc) override {
         if (!installed_ || running_ || !acc.isLoggedIn() || !req_.metBy(p.getHardware()) || !platformCheck(p)) return false;
         running_ = true; return true;
     }
+
     bool stop() override {
         if (!running_) return false;
         running_ = false; return true;
     }
+
 protected:
     virtual bool platformCheck(const Platform& p) const {
         if (p.getType() == PlatformType::Console) {

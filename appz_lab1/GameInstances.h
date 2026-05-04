@@ -36,12 +36,24 @@ public:
 class BrowserGame : public Game {
 public:
     BrowserGame(std::string name, GameRequirements req) : Game(std::move(name), GameGenre::Browser, req) {}
-    bool isInstalled() const override { return true; } // Завжди "встановлена"
-    bool install(Platform&) override { return true; }
-    bool start(Platform& p, UserAccount& acc) override {
-        if (running_ || !acc.isLoggedIn() || !req_.metBy(p.getHardware())) return false;
-        running_ = true; return true;
-    }
-    bool stop() override { if (!running_) return false; running_ = false; return true; }
-};
 
+    bool isInstalled() const override { return true; }
+    bool install(Platform&)  override { return true; }
+    bool uninstall(Platform&) override { return false; }
+
+    bool start(Platform& p, UserAccount& acc) override {
+        if (running_) return false;
+        if (!acc.isLoggedIn()) return false;
+        if (!req_.metBy(p.getHardware())) return false;
+        running_ = true;
+        emit(GameEvent::Started, name_);
+        return true;
+    }
+
+    bool stop() override {
+        if (!running_) return false;
+        running_ = false;
+        emit(GameEvent::Stopped, name_);
+        return true;
+    }
+};
