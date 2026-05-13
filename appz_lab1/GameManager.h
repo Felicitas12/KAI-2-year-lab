@@ -31,6 +31,14 @@ public:
 		if (!g->getRequirements().hasSpace(p.getHardware())) return "Недостатньо місця на HDD.";
 		g->install(p); return "";
 	}
+	std::string uninstallGame(const std::string& name, Platform& p) {
+		auto* g = find(name);
+		if (!g) return "Гру не знайдено.";
+		if (!g->isInstalled()) return "Гра не встановлена.";
+		if (g->isRunning()) return "Не можна видалити запущену гру.";
+		g->uninstall(p);
+		return "";
+	}
 
 	std::string startGame(const std::string& name, Platform& p, UserAccount& acc) {
 		if (active_ && active_->isRunning()) return "Вже запущена гра '" + active_->getName() + "'. Спочатку зупиніть її.";
@@ -81,4 +89,7 @@ public:
 	float getRating(const std::string& name) {
 		auto* g = find(name); return g ? g->getRating() : 0.f;
 	}
+
+	Game* getActiveGame() const { return active_; }
+	const std::vector<std::unique_ptr<Game>>& getLibrary() const { return library_; }
 };
